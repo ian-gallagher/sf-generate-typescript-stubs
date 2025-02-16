@@ -4,7 +4,9 @@
   "description": "Generates SF API type stubs in typescript for client consumption",
   "main": "src/Main",
   "scripts": {
-    "postinstall": "sudo chmod +x ./scripts/linux_start.sh && ./scripts/linux_start.sh 4.13.2"
+    "assignxperms": "sudo chmod +x ./scripts/set_execute_perms.sh && ./scripts/set_execute_perms.sh",
+    "postinstall": "npm run assignxperms && ./scripts/download_antlr_jar.sh && npm run buildgrammar",
+    "buildgrammar": "./scripts/generate_grammar_code.sh"
   },
   "author": "",
   "license": "ISC"
