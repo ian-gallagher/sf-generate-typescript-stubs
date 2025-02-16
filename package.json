@@ -1,0 +1,11 @@
+{
+  "name": "typescript-sf-stub-generator",
+  "version": "1.0.0",
+  "description": "Generates SF API type stubs in typescript for client consumption",
+  "main": "src/Main",
+  "scripts": {
+    "postinstall": "sudo chmod +x ./scripts/linux_start.sh && ./scripts/linux_start.sh 4.13.2"
+  },
+  "author": "",
+  "license": "ISC"
+}
