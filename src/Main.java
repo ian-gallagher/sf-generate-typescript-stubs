@@ -1,30 +1,54 @@
-import conversion.ApexToTypeScriptConverter;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
-import antlrapex.apexLexer;
-import antlrapex.apexParser;
-
-import java.io.FileWriter;
+import conversion.ApexParseListener;
+import java.nio.file.*;
+import java.io.IOException;
+import apex.FileIterator;
+import conversion.ClassOrInterface;
+import conversion.PrimitiveTypeWriter;
+import conversion.TypeUtils;
+import settings.Provider;
+import ts.Creator;
+import ts.Writer;
+import utils.FileUtils;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
-        // Read the Apex code from a file or string
-        CharStream input = CharStreams.fromFileName("input-code/ApexFile.cls");
+    public static void main(String[] args) {
+        String apexCodeFolderPath;
+        Provider settingsProvider = new Provider();
+        // Check if the folder path is provided as a command-line argument
+        if (args.length > 0) {
+            apexCodeFolderPath = args[0];
+        } else {
+            // Read the folder path from a settings file or as an input argument
+            apexCodeFolderPath = settingsProvider.apexCodeFolderPath();
+        }
 
-        // Create the lexer and parser
-        apexLexer lexer = new apexLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        apexParser parser = new apexParser(tokens);
+        try (FileIterator fileIterator = new FileIterator(apexCodeFolderPath, "cls")) {
+            while (fileIterator.hasNext()) {
+                Path file = fileIterator.next();
+                if (Files.isRegularFile(file)) { // Ensure it's a regular file
+                    String apexFileName = file.getFileName().toString();
+                    String apexFilePath = apexCodeFolderPath + apexFileName;
 
-        // Parse the input and get the AST
-        ParseTree tree = parser.compilationUnit();
+                    // this writer will be used to write the TypeScript code to the output file
+                    Writer writer = FileUtils.createFileWriter(apexFileName);
+                    TypeUtils typeUtils = new TypeUtils(writer);
 
-        // Traverse the AST using a listener or visitor
-        ParseTreeWalker walker = new ParseTreeWalker();
-        ApexToTypeScriptConverter converter = new ApexToTypeScriptConverter();
-        walker.walk(converter, tree);
-        FileWriter writer = new FileWriter("output/output.ts");
-        writer.write(converter.getTypeScriptCode()); // Assuming you have a method to get the generated code
-        writer.close();
+                    ApexParseListener converter = new ApexParseListener(
+                            apexFileName,
+                            apexCodeFolderPath,
+                            new Creator(
+                                    writer,
+                                    new ClassOrInterface(typeUtils, writer),
+                                    new PrimitiveTypeWriter(typeUtils)
+                            )
+                    );
+                    converter.convert();
+
+                    System.out.println("Processed file: " + apexFilePath);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error iterating over files: " + e.getMessage());
+        }
     }
 }
