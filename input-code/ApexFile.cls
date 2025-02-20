@@ -24,6 +24,8 @@ public with sharing class ProposalController {
     @AuraEnabled
     public Map<String, Map<String, CityLocation[]>> planetCountryCities;
     @AuraEnabled
+    public Map<String, Map<String, List<CityLocation>>> planetCountryCityLocations;
+    @AuraEnabled
     public MyClass.InnerType customTypeVar;
 
     // parser should stub out this method in typescript

@@ -27,7 +27,9 @@ public class NonMapClassType implements IClassOrInterfaceProcessor {
             TypeArgumentInfo typeArgumentInfo = iterator.next();
             apexParser.Type_Context typeContext = typeArgumentInfo.getTypeArgumentContext().type_();
             apexParser.ClassOrInterfaceTypeContext innerClassOrInterfaceType = typeContext.classOrInterfaceType();
-            this.processArgumentForNonMapType(innerClassOrInterfaceType);
+            String innerType = this._typeUtils.processTypeIdentifier(innerClassOrInterfaceType.Identifier());
+            this._typeUtils.addTypePart(innerType);
+            this.processArgumentForNonMapType(innerClassOrInterfaceType, innerType);
             this._typeUtils.writeBrackets(typeContext);
         }
 
@@ -35,11 +37,11 @@ public class NonMapClassType implements IClassOrInterfaceProcessor {
     }
 
     private void processArgumentForNonMapType(
-            apexParser.ClassOrInterfaceTypeContext innerClassOrInterfaceType
+            apexParser.ClassOrInterfaceTypeContext innerClassOrInterfaceType,
+            String contextType
             ) {
         if (innerClassOrInterfaceType != null) {
             if (!innerClassOrInterfaceType.typeArguments().isEmpty()) {
-                String contextType = this._typeUtils.processTypeIdentifier(innerClassOrInterfaceType.Identifier());
                 ClassOrInterfaceTypeFactory.getConversionWriter(
                         contextType,
                         this._typeUtils
