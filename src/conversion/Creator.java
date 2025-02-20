@@ -1,19 +1,19 @@
-package ts;
+package conversion;
 
 import antlrapex.apexParser.FieldDeclarationContext;
 import antlrapex.apexParser.PropertyDeclarationContext;
 import antlrapex.apexParser.ClassDeclarationContext;
-import conversion.ClassOrInterface;
-import conversion.PrimitiveTypeWriter;
+import conversion.writers.ClassOrInterfaceWriter;
+import conversion.writers.PrimitiveTypeWriter;
 
 public class Creator {
     private final Writer _writer;
-    public final ClassOrInterface _classOrInterfaceWriter;
+    public final ClassOrInterfaceWriter _classOrInterfaceWriter;
     public final PrimitiveTypeWriter _primitiveTypeWriter;
 
     public Creator(
             Writer fileWriter,
-            ClassOrInterface classOrInterfaceWriter,
+            ClassOrInterfaceWriter classOrInterfaceWriter,
             PrimitiveTypeWriter primitiveTypeWriter
     ) {
         this._writer = fileWriter;

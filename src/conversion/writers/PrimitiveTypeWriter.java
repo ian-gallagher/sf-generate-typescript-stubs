@@ -1,7 +1,8 @@
-package conversion;
+package conversion.writers;
 
 import antlrapex.apexParser.VariableDeclaratorsContext;
 import antlrapex.apexParser.PrimitiveTypeContext;
+import conversion.type.TypeUtils;
 
 import java.util.*;
 

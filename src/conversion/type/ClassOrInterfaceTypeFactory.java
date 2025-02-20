@@ -1,4 +1,4 @@
-package conversion;
+package conversion.type;
 
 public class ClassOrInterfaceTypeFactory {
     public static IClassOrInterfaceProcessor getConversionWriter(

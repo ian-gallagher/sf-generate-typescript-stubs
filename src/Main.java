@@ -1,13 +1,13 @@
-import conversion.ApexParseListener;
+import listeners.ApexParseListener;
 import java.nio.file.*;
 import java.io.IOException;
 import apex.FileIterator;
-import conversion.ClassOrInterface;
-import conversion.PrimitiveTypeWriter;
-import conversion.TypeUtils;
+import conversion.writers.ClassOrInterfaceWriter;
+import conversion.writers.PrimitiveTypeWriter;
+import conversion.type.TypeUtils;
 import settings.Provider;
-import ts.Creator;
-import ts.Writer;
+import conversion.Creator;
+import conversion.Writer;
 import utils.FileUtils;
 
 public class Main {
@@ -38,7 +38,7 @@ public class Main {
                             apexCodeFolderPath,
                             new Creator(
                                     writer,
-                                    new ClassOrInterface(typeUtils, writer),
+                                    new ClassOrInterfaceWriter(typeUtils, writer),
                                     new PrimitiveTypeWriter(typeUtils)
                             )
                     );

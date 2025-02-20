@@ -1,4 +1,4 @@
-package conversion;
+package conversion.type;
 
 import antlrapex.apexParser.ClassOrInterfaceTypeContext;
 

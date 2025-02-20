@@ -1,14 +1,14 @@
-package conversion;
+package listeners;
 
 import antlrapex.apexBaseListener;
 import antlrapex.apexParser.*;
-import apex.Parsing;
+import parsing.ParseUtils;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.IOException;
 
-import ts.Creator;
+import conversion.Creator;
 
 public class ApexParseListener extends apexBaseListener {
     private final Creator _tsTypeCreator;
@@ -23,7 +23,7 @@ public class ApexParseListener extends apexBaseListener {
         this._tsTypeCreator = tsTypeCreator;
 
         // Parse the input and get the AST
-        this._tree = Parsing.getTree(filePath + fileName);
+        this._tree = ParseUtils.getTree(filePath + fileName);
     }
 
     public void convert() throws IOException {

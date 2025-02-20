@@ -1,7 +1,9 @@
-package conversion;
+package conversion.type;
 
 import antlrapex.apexParser;
 import antlrapex.apexParser.ClassOrInterfaceTypeContext;
+import conversion.type.argument.TypeArgumentInfo;
+import conversion.type.argument.TypeArgumentsIterator;
 
 public class MapClassType implements IClassOrInterfaceProcessor {
     TypeUtils _typeUtils;

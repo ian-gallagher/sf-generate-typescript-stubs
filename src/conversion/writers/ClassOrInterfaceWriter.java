@@ -1,16 +1,18 @@
-package conversion;
+package conversion.writers;
 
 import antlrapex.apexParser.ClassOrInterfaceTypeContext;
 import antlrapex.apexParser.VariableDeclaratorsContext;
 import antlrapex.apexParser.VariableDeclaratorContext;
-import ts.Writer;
+import conversion.type.ClassOrInterfaceTypeFactory;
+import conversion.type.TypeUtils;
+import conversion.Writer;
 
-public class ClassOrInterface {
+public class ClassOrInterfaceWriter {
     private String currentIdentifier;
     private final Writer _tsTypeWriter;
     private final TypeUtils _typeUtils;
 
-    public ClassOrInterface(
+    public ClassOrInterfaceWriter(
             TypeUtils typeUtils,
             Writer tsTypeCreator
     ) {

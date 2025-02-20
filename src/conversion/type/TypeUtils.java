@@ -1,9 +1,9 @@
-package conversion;
+package conversion.type;
 
 import antlrapex.apexParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import ts.Writer;
+import conversion.Writer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +48,7 @@ public class TypeUtils {
         if (terminalNodes.size() == 1) {
             String identifier = terminalNodes.getFirst().getText();
 
-            // handle special case for type Map
+            // don't attempt to convert Map or List
             if ("Map".equals(identifier) || "List".equals(identifier)) {
                 return identifier;
             } else {

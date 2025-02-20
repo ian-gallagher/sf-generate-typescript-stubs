@@ -1,6 +1,8 @@
-package conversion;
+package conversion.type;
 
 import antlrapex.apexParser;
+import conversion.type.argument.TypeArgumentInfo;
+import conversion.type.argument.TypeArgumentsIterator;
 
 public class NonMapClassType implements IClassOrInterfaceProcessor {
     TypeUtils _typeUtils;

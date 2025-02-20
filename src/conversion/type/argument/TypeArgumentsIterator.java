@@ -1,4 +1,4 @@
-package conversion;
+package conversion.type.argument;
 
 import antlrapex.apexParser.TypeArgumentsContext;
 import antlrapex.apexParser.TypeArgumentContext;
