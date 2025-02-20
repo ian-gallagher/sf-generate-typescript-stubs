@@ -9,13 +9,11 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import java.io.IOException;
 
 import ts.Creator;
-import ts.types.ClassDeclaration;
 
 public class ApexParseListener extends apexBaseListener {
     private final Creator _tsTypeCreator;
     private final ParseTree _tree;
-
-//    private final Map<String, List<String>> methodAnnotations = new HashMap<>();
+    private Boolean _isAuraEnabled = false;
 
     public ApexParseListener(
             String fileName,
@@ -35,26 +33,9 @@ public class ApexParseListener extends apexBaseListener {
         this._tsTypeCreator.close();
     }
 
-//    @Override
-//    public void enterClassBodyDeclaration(ClassBodyDeclarationContext ctx) {
-//        // Collect annotations
-//        List<String> annotations = new ArrayList<>();
-//        for (AnnotationContext annotation : ctx.annotation()) {
-//            annotations.add(annotation.getText());
-//        }
-//
-//        // Check for method declarations
-//        if (ctx.memberDeclaration().methodDeclaration() != null && !annotations.isEmpty()) {
-//            MethodDeclarationContext methodCtx = ctx.memberDeclaration().methodDeclaration();
-//            this.methodAnnotations.put(methodCtx.Identifier().getText(), annotations);
-//        }
-//    }
-
     @Override
     public void enterClassDeclaration(ClassDeclarationContext ctx) {
-        // Convert Apex class to TypeScript class
-        ClassDeclaration classDeclaration = new ClassDeclaration(ctx.Identifier().getText());
-        this._tsTypeCreator.beginClass(classDeclaration);
+        this._tsTypeCreator.beginClass(ctx);
     }
 
     @Override
@@ -64,11 +45,45 @@ public class ApexParseListener extends apexBaseListener {
 
     @Override
     public void enterFieldDeclaration(FieldDeclarationContext fieldCtx) {
-        this._tsTypeCreator.fieldDeclaration(fieldCtx);
+        if (this._isAuraEnabled) {
+            this._tsTypeCreator.fieldDeclaration(fieldCtx);
+        }
     }
 
     @Override
     public void exitFieldDeclaration(FieldDeclarationContext fieldCtx) {
-        this._tsTypeCreator.endFieldDeclaration();
+        if (this._isAuraEnabled) {
+            this._tsTypeCreator.endFieldDeclaration();
+            this._isAuraEnabled = false;
+        }
+    }
+
+    @Override
+    public void enterPropertyDeclaration(PropertyDeclarationContext propertyCtx) {
+        if (this._isAuraEnabled) {
+            this._tsTypeCreator.propertyDeclaration(propertyCtx);
+        }
+    }
+
+    @Override
+    public void exitPropertyDeclaration(PropertyDeclarationContext propertyCtx) {
+        if (this._isAuraEnabled) {
+            this._tsTypeCreator.endFieldDeclaration();
+            this._isAuraEnabled = false;
+        }
+    }
+
+    @Override
+    public void enterAnnotation(AnnotationContext annotationCtx) {
+        if (annotationCtx.getText().contains("AuraEnabled")) {
+            this._isAuraEnabled = true;
+        }
+    }
+
+    @Override
+    public void exitStatement(StatementContext statementCtx) {
+        if (this._isAuraEnabled) {
+            this._isAuraEnabled = false;
+        }
     }
 }

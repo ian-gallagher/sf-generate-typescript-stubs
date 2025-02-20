@@ -1,6 +1,5 @@
 package conversion;
 
-import antlrapex.apexParser.FieldDeclarationContext;
 import antlrapex.apexParser.VariableDeclaratorsContext;
 import antlrapex.apexParser.PrimitiveTypeContext;
 
@@ -27,10 +26,12 @@ public class PrimitiveTypeWriter {
         this._typeUtils = typeUtils;
     }
 
-    public void process(FieldDeclarationContext fieldCtx) {
-        this.getPrintFieldDeclarator(fieldCtx.variableDeclarators());
+    public void process(
+            PrimitiveTypeContext primitiveType,
+            VariableDeclaratorsContext variableDeclarators
+    ) {
+        this.getPrintFieldDeclarator(variableDeclarators);
         // get current converted/sanitized type
-        PrimitiveTypeContext primitiveType = fieldCtx.type_().primitiveType();
         String currentConvertedType = this.handleIdentifier(primitiveType.getText());
         this._typeUtils.addTypePart(currentConvertedType);
     }

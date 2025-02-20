@@ -1,6 +1,10 @@
 public with sharing class ProposalController {
     private static final String PROPOSAL_SERVICE = new ProposalService();
 
+    @AuraEnabled
+    public int totalPlanets { get; set; }
+    @AuraEnabled
+    public String country { get; set; }
 	@AuraEnabled
 	public Id proposalId;
 	@AuraEnabled
@@ -21,8 +25,6 @@ public with sharing class ProposalController {
     public Map<String, Map<String, CityLocation[]>> planetCountryCities;
     @AuraEnabled
     public MyClass.InnerType customTypeVar;
-	@AuraEnabled
-    public String country { get; set; }
 
     // parser should stub out this method in typescript
 	@AuraEnabled

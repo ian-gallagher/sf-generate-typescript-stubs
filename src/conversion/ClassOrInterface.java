@@ -1,7 +1,6 @@
 package conversion;
 
 import antlrapex.apexParser.ClassOrInterfaceTypeContext;
-import antlrapex.apexParser.FieldDeclarationContext;
 import antlrapex.apexParser.VariableDeclaratorsContext;
 import antlrapex.apexParser.VariableDeclaratorContext;
 import ts.Writer;
@@ -19,9 +18,11 @@ public class ClassOrInterface {
         this._typeUtils = typeUtils;
     }
 
-    public void process(FieldDeclarationContext fieldCtx) {
-        ClassOrInterfaceTypeContext classOrInterfaceType = fieldCtx.type_().classOrInterfaceType();
-        this.currentIdentifier = this.processVariableDeclarators(fieldCtx.variableDeclarators());
+    public void process(
+            ClassOrInterfaceTypeContext classOrInterfaceType,
+            VariableDeclaratorsContext variableDeclarators
+    ) {
+        this.currentIdentifier = this.processVariableDeclarators(variableDeclarators);
         this.beginTypePart(this.currentIdentifier + ": ");
         String contextType = this._typeUtils.processTypeIdentifier(classOrInterfaceType.Identifier());
 
