@@ -2,29 +2,20 @@ package conversion.writers;
 
 import antlrapex.apexParser.VariableDeclaratorsContext;
 import antlrapex.apexParser.PrimitiveTypeContext;
-import conversion.type.TypeUtils;
-
-import java.util.*;
+import conversion.Writer;
+import conversion.type.ITypeConvertUtil;
+import typeresolution.ResolvedTypeInfo;
 
 public class PrimitiveTypeWriter {
-    private final TypeUtils _typeUtils;
-    private static final Map<String, String> TYPE_MAPPING = new HashMap<>();
-
-    static {
-        TYPE_MAPPING.put("byte", "number");
-        TYPE_MAPPING.put("short", "number");
-        TYPE_MAPPING.put("int", "number");
-        TYPE_MAPPING.put("long", "number");
-        TYPE_MAPPING.put("float", "number");
-        TYPE_MAPPING.put("double", "number");
-        TYPE_MAPPING.put("char", "string");
-        TYPE_MAPPING.put("boolean", "boolean");
-    }
+    private final Writer _tsTypeWriter;
+    private final ITypeConvertUtil _typeConvertUtil;
 
     public PrimitiveTypeWriter(
-            TypeUtils typeUtils
+            Writer tsTypeWriter,
+            ITypeConvertUtil typeConvertUtil
     ) {
-        this._typeUtils = typeUtils;
+        this._tsTypeWriter = tsTypeWriter;
+        this._typeConvertUtil = typeConvertUtil;
     }
 
     public void process(
@@ -33,8 +24,8 @@ public class PrimitiveTypeWriter {
     ) {
         this.getPrintFieldDeclarator(variableDeclarators);
         // get current converted/sanitized type
-        String currentConvertedType = this.handleIdentifier(primitiveType.getText());
-        this._typeUtils.addTypePart(currentConvertedType);
+        ResolvedTypeInfo currentConvertedType = this._typeConvertUtil.convertType(primitiveType.getText());
+        this._tsTypeWriter.concatLine(currentConvertedType.resolvedTsSymbol);
     }
 
     /**
@@ -43,20 +34,6 @@ public class PrimitiveTypeWriter {
      */
     private void getPrintFieldDeclarator(VariableDeclaratorsContext variableDeclarators) {
         String currentIdentifier = variableDeclarators.variableDeclarator(0).getText();
-        this._typeUtils.beginTypePart(currentIdentifier + ": ");
-    }
-
-    /**
-     * Handles the identifier and returns the converted type.
-     * @param identifier type identifier
-     * @return converted type identifier
-     */
-    private String handleIdentifier(String identifier) {
-        String jsTypeIdentifier = PrimitiveTypeWriter.TYPE_MAPPING.get(identifier.toLowerCase());
-        if (Objects.isNull(jsTypeIdentifier)) {
-            return identifier;
-        } else {
-            return jsTypeIdentifier;
-        }
+        this._tsTypeWriter.beginLine(currentIdentifier + ": ");
     }
 }

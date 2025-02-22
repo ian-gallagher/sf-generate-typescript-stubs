@@ -1,13 +1,23 @@
 package conversion.type;
 
 import antlrapex.apexParser;
+import conversion.Writer;
 import conversion.type.argument.TypeArgumentInfo;
 import conversion.type.argument.TypeArgumentsIterator;
+import typeresolution.ResolvedTypeInfo;
 
 public class NonMapClassType implements IClassOrInterfaceProcessor {
+    Writer _tsTypeWriter;
+    ITypeConvertUtil _typeConvertUtil;
     TypeUtils _typeUtils;
 
-    public NonMapClassType(TypeUtils typeUtils) {
+    public NonMapClassType(
+            Writer tsTypeWriter,
+            ITypeConvertUtil typeConvertUtil,
+            TypeUtils typeUtils
+    ) {
+        this._tsTypeWriter = tsTypeWriter;
+        this._typeConvertUtil = typeConvertUtil;
         this._typeUtils = typeUtils;
     }
 
@@ -29,10 +39,10 @@ public class NonMapClassType implements IClassOrInterfaceProcessor {
             TypeArgumentInfo typeArgumentInfo = iterator.next();
             apexParser.Type_Context typeContext = typeArgumentInfo.getTypeArgumentContext().type_();
             apexParser.ClassOrInterfaceTypeContext innerClassOrInterfaceType = typeContext.classOrInterfaceType();
-            String innerType = this._typeUtils.processTypeIdentifier(innerClassOrInterfaceType.Identifier());
-            this._typeUtils.addTypePart(innerType);
-            this.processArgumentForNonMapType(innerClassOrInterfaceType, innerType);
-            this._typeUtils.writeBrackets(typeContext);
+            ResolvedTypeInfo resolvedType = this._typeConvertUtil.convertType(innerClassOrInterfaceType.Identifier());
+            this._tsTypeWriter.concatLine(resolvedType.resolvedTsSymbol);
+            this.processArgumentForNonMapType(innerClassOrInterfaceType, resolvedType.symbol);
+            this._tsTypeWriter.concatLine(this._typeUtils.buildBrackets(typeContext));
         }
 
         this.endType(contextType);
@@ -46,7 +56,9 @@ public class NonMapClassType implements IClassOrInterfaceProcessor {
             if (!innerClassOrInterfaceType.typeArguments().isEmpty()) {
                 ClassOrInterfaceTypeFactory.getConversionWriter(
                         contextType,
-                        this._typeUtils
+                        this._tsTypeWriter,
+                        this._typeUtils,
+                        this._typeConvertUtil
                 ).iterateArguments(innerClassOrInterfaceType, contextType);
             }
         }
@@ -55,13 +67,13 @@ public class NonMapClassType implements IClassOrInterfaceProcessor {
     private void beginType(String typeIdentifier) {
         // handle special case for type Map
         if (!"List".equals(typeIdentifier)) {
-            this._typeUtils.addTypePart(typeIdentifier);
+            this._tsTypeWriter.concatLine(typeIdentifier);
         }
     }
 
     private void endType(String typeIdentifier) {
         if (typeIdentifier.equals("List")) {
-            this._typeUtils.addTypePart("[]");
+            this._tsTypeWriter.concatLine("[]");
         }
     }
 }

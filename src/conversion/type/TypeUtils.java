@@ -3,58 +3,48 @@ package conversion.type;
 import antlrapex.apexParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import conversion.Writer;
+import typeresolution.ITypeResolver;
+import typeresolution.ResolvedTypeInfo;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class TypeUtils {
-    private final Writer _tsTypeWriter;
-    private static final Map<String, String> TYPE_MAPPING = new HashMap<>();
+    ITypeResolver _typeResolver;
 
-    static {
-        TYPE_MAPPING.put("String", "string");
-        TYPE_MAPPING.put("Integer", "number");
-        TYPE_MAPPING.put("Double", "number");
-        TYPE_MAPPING.put("Decimal", "number | string");
-        TYPE_MAPPING.put("Long", "number");
-        TYPE_MAPPING.put("Boolean", "boolean");
-        TYPE_MAPPING.put("Object", "object");
-        TYPE_MAPPING.put("Id", "string");
-        TYPE_MAPPING.put("Date", "string");
-        TYPE_MAPPING.put("Datetime", "string");
+    public TypeUtils(
+            ITypeResolver typeConvertUtil
+    ) {
+        this._typeResolver = typeConvertUtil;
     }
 
-    public TypeUtils(Writer tsTypeCreator) {
-        this._tsTypeWriter = tsTypeCreator;
+    public ResolvedTypeInfo buildResolvedTypeObject(String identifier) {
+        ResolvedTypeInfo resolvedType = new ResolvedTypeInfo();
+        resolvedType.symbol = identifier;
+        resolvedType.resolvedTsSymbol = identifier;
+        resolvedType.isResolved = true;
+        return resolvedType;
     }
 
-    public void writeBrackets(apexParser.Type_Context typeContext) {
+    public String buildBrackets(apexParser.Type_Context typeContext) {
+        StringBuilder bracketsBuilder = new StringBuilder();
+
         if (!typeContext.LBRACK().isEmpty() && !typeContext.RBRACK().isEmpty()) {
             typeContext.children.forEach(child -> {
                 if (child instanceof TerminalNode node) {
                     Token token = node.getSymbol();
                     if (token.getType() == apexParser.LBRACK || token.getType() == apexParser.RBRACK) {
-                        this.addTypePart(token.getText());
+                        bracketsBuilder.append(token.getText());
                     }
                 }
             });
         }
+
+        return bracketsBuilder.toString();
     }
 
-    public String processTypeIdentifier(List<TerminalNode> terminalNodes) {
+    public String processIdentifier(List<TerminalNode> terminalNodes) {
         if (terminalNodes.size() == 1) {
-            String identifier = terminalNodes.getFirst().getText();
-
-            // don't attempt to convert Map or List
-            if ("Map".equals(identifier) || "List".equals(identifier)) {
-                return identifier;
-            } else {
-                // if single identifier, I.E. String, Integer, etc we attempt to convert it
-                return this.handleIdentifier(identifier);
-            }
+            return terminalNodes.getFirst().getText();
         } else {
             StringBuilder strBuilder = new StringBuilder();
             // if multiple identifiers, I.E. ParentType.InnerType etc
@@ -70,22 +60,5 @@ public class TypeUtils {
 
             return strBuilder.toString();
         }
-    }
-
-    private String handleIdentifier(String identifier) {
-        String jsTypeIdentifier = TypeUtils.TYPE_MAPPING.get(identifier);
-        if (Objects.isNull(jsTypeIdentifier)) {
-            return identifier;
-        } else {
-            return jsTypeIdentifier;
-        }
-    }
-
-    public void beginTypePart(String typePart) {
-        this._tsTypeWriter.beginLine(typePart);
-    }
-
-    public void addTypePart(String typePart) {
-        this._tsTypeWriter.concatLine(typePart);
     }
 }

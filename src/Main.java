@@ -1,3 +1,6 @@
+import conversion.type.ClassOrInterfaceTypeUtil;
+import conversion.type.ITypeConvertUtil;
+import conversion.type.PrimitiveTypeUtil;
 import listeners.ApexParseListener;
 import java.nio.file.*;
 import java.io.IOException;
@@ -8,6 +11,8 @@ import conversion.type.TypeUtils;
 import settings.Provider;
 import conversion.Creator;
 import conversion.Writer;
+import typeresolution.ITypeResolver;
+import typeresolution.TypeResolver;
 import utils.FileUtils;
 
 public class Main {
@@ -22,6 +27,8 @@ public class Main {
             apexCodeFolderPath = settingsProvider.apexCodeFolderPath();
         }
 
+        ITypeResolver typeResolver = new TypeResolver(apexCodeFolderPath);
+
         try (FileIterator fileIterator = new FileIterator(apexCodeFolderPath, "cls")) {
             while (fileIterator.hasNext()) {
                 Path file = fileIterator.next();
@@ -31,15 +38,17 @@ public class Main {
 
                     // this writer will be used to write the TypeScript code to the output file
                     Writer writer = FileUtils.createFileWriter(apexFileName);
-                    TypeUtils typeUtils = new TypeUtils(writer);
+                    TypeUtils typeUtils = new TypeUtils(typeResolver);
+                    ITypeConvertUtil classOrInterfaceUtil = new ClassOrInterfaceTypeUtil(typeResolver, typeUtils);
+                    ITypeConvertUtil typeConvertUtil = new PrimitiveTypeUtil(typeResolver, typeUtils);
 
                     ApexParseListener converter = new ApexParseListener(
                             apexFileName,
                             apexCodeFolderPath,
                             new Creator(
                                     writer,
-                                    new ClassOrInterfaceWriter(typeUtils, writer),
-                                    new PrimitiveTypeWriter(typeUtils)
+                                    new ClassOrInterfaceWriter(writer, typeUtils, classOrInterfaceUtil),
+                                    new PrimitiveTypeWriter(writer, typeConvertUtil)
                             )
                     );
                     converter.convert();

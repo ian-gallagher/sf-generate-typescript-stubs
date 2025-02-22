@@ -4,19 +4,24 @@ import antlrapex.apexParser.ClassOrInterfaceTypeContext;
 import antlrapex.apexParser.VariableDeclaratorsContext;
 import antlrapex.apexParser.VariableDeclaratorContext;
 import conversion.type.ClassOrInterfaceTypeFactory;
+import conversion.type.ITypeConvertUtil;
 import conversion.type.TypeUtils;
 import conversion.Writer;
+import typeresolution.ResolvedTypeInfo;
 
 public class ClassOrInterfaceWriter {
     private String currentIdentifier;
     private final Writer _tsTypeWriter;
     private final TypeUtils _typeUtils;
+    private final ITypeConvertUtil _typeConvertUtil;
 
     public ClassOrInterfaceWriter(
+            Writer tsTypeCreator,
             TypeUtils typeUtils,
-            Writer tsTypeCreator
+            ITypeConvertUtil typeConvertUtil
     ) {
         this._tsTypeWriter = tsTypeCreator;
+        this._typeConvertUtil = typeConvertUtil;
         this._typeUtils = typeUtils;
     }
 
@@ -25,13 +30,15 @@ public class ClassOrInterfaceWriter {
             VariableDeclaratorsContext variableDeclarators
     ) {
         this.currentIdentifier = this.processVariableDeclarators(variableDeclarators);
-        this.beginTypePart(this.currentIdentifier + ": ");
-        String contextType = this._typeUtils.processTypeIdentifier(classOrInterfaceType.Identifier());
+        this._tsTypeWriter.beginLine(this.currentIdentifier + ": ");
+        ResolvedTypeInfo resolvedType = this._typeConvertUtil.convertType(classOrInterfaceType.Identifier());
 
         ClassOrInterfaceTypeFactory.getConversionWriter(
-                contextType,
-                this._typeUtils
-        ).iterateArguments(classOrInterfaceType, contextType);
+                resolvedType.symbol,
+                this._tsTypeWriter,
+                this._typeUtils,
+                this._typeConvertUtil
+        ).iterateArguments(classOrInterfaceType, resolvedType.symbol);
     }
 
     /**
@@ -54,9 +61,5 @@ public class ClassOrInterfaceWriter {
 
         this.currentIdentifier = strBuilder.toString();
         return strBuilder.toString();
-    }
-
-    private void beginTypePart(String typePart) {
-        this._tsTypeWriter.beginLine(typePart);
     }
 }
