@@ -1,10 +1,11 @@
-package conversion.type;
+package tsgeneration.type;
 
 import antlrapex.apexParser;
+import antlrapex.apexParser.VariableDeclaratorsContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import typeresolution.ITypeResolver;
-import typeresolution.ResolvedTypeInfo;
+import tsgeneration.type.resolution.ITypeResolver;
+import tsgeneration.type.resolution.ResolvedTypeInfo;
 
 import java.util.List;
 
@@ -18,11 +19,7 @@ public class TypeUtils {
     }
 
     public ResolvedTypeInfo buildResolvedTypeObject(String identifier) {
-        ResolvedTypeInfo resolvedType = new ResolvedTypeInfo();
-        resolvedType.symbol = identifier;
-        resolvedType.resolvedTsSymbol = identifier;
-        resolvedType.isResolved = true;
-        return resolvedType;
+        return new ResolvedTypeInfo(identifier);
     }
 
     public String buildBrackets(apexParser.Type_Context typeContext) {
@@ -60,5 +57,26 @@ public class TypeUtils {
 
             return strBuilder.toString();
         }
+    }
+
+    /**
+     * Iterates over variable declarators and begins the type part. This is the variable name.
+     * @param variableDeclarators variableDeclarators context list
+     */
+    public String processVariableDeclarators(VariableDeclaratorsContext variableDeclarators) {
+        int variableDeclaratorCount = variableDeclarators.variableDeclarator().size();
+
+        StringBuilder strBuilder = new StringBuilder();
+
+        for (int i = 0; i < variableDeclaratorCount; i++) {
+            apexParser.VariableDeclaratorContext variableDeclarator = variableDeclarators.variableDeclarator(i);
+            if (strBuilder.isEmpty()) {
+                strBuilder.append(variableDeclarator.variableDeclaratorId().getText());
+            } else {
+                strBuilder.append(variableDeclarator.variableDeclaratorId().getText());
+            }
+        }
+
+        return strBuilder.toString();
     }
 }

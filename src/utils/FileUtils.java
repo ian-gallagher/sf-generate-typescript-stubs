@@ -1,7 +1,5 @@
 package utils;
 
-import conversion.Writer;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,13 +15,13 @@ public class FileUtils {
         return fileName.substring(0, lastDotIndex);
     }
 
-    public static Writer createFileWriter(String fileName) {
+    public static FileWriter getTsFileWriter(String fileName) {
         String fileFolder = "output/types/";
         String fileNameAndPath = fileFolder + removeExtension(fileName) + ".ts";
         FileUtils.ensureDirectoryExists(fileFolder);
 
         try {
-            return new Writer(new FileWriter(fileNameAndPath));
+            return new FileWriter(fileNameAndPath);
         } catch (IOException e) {
             throw new RuntimeException("Failed to create TypeScript file for " + fileNameAndPath);
         }

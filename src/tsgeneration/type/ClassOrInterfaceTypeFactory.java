@@ -1,11 +1,12 @@
-package conversion.type;
+package tsgeneration.type;
 
-import conversion.Writer;
+import tsgeneration.InterfaceWriter;
+import tsgeneration.type.conversion.ITypeConvertUtil;
 
 public class ClassOrInterfaceTypeFactory {
     public static IClassOrInterfaceProcessor getConversionWriter(
             String contextType,
-            Writer tsTypeWriter,
+            InterfaceWriter tsTypeWriter,
             TypeUtils typeUtils,
             ITypeConvertUtil typeConvertUtil
     ) {

@@ -1,17 +1,16 @@
-package conversion.type;
+package tsgeneration.type.conversion;
 
+import tsgeneration.type.TypeUtils;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import typeresolution.ITypeResolver;
-import typeresolution.ResolvedTypeInfo;
+import tsgeneration.type.resolution.ITypeResolver;
+import tsgeneration.type.resolution.ResolvedTypeInfo;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-public class ClassOrInterfaceTypeUtil implements ITypeConvertUtil {
+public class ClassOrInterfaceTypeConverter implements ITypeConvertUtil {
     private final ITypeResolver _typeResolver;
     private final TypeUtils _typeUtils;
+    private final List<ResolvedTypeInfo> _externalTypes = new ArrayList<>();
     private static final Map<String, String> CLASSORINTERFACE_TYPES = new HashMap<>();
 
     static {
@@ -27,7 +26,7 @@ public class ClassOrInterfaceTypeUtil implements ITypeConvertUtil {
         CLASSORINTERFACE_TYPES.put("Datetime", "string");
     }
 
-    public ClassOrInterfaceTypeUtil(ITypeResolver typeResolver, TypeUtils typeUtils) {
+    public ClassOrInterfaceTypeConverter(ITypeResolver typeResolver, TypeUtils typeUtils) {
         this._typeResolver = typeResolver;
         this._typeUtils = typeUtils;
     }
@@ -41,10 +40,20 @@ public class ClassOrInterfaceTypeUtil implements ITypeConvertUtil {
         return this.processTypeOrIdentifier(identifier);
     }
 
+    public String flushImports() {
+        StringBuilder imports = new StringBuilder();
+        for (ResolvedTypeInfo externalType : this._externalTypes) {
+            imports.append("import { ").append(externalType.getTsSymbol()).append(" } from './").append(externalType.importPath()).append("';\n");
+        }
+
+        this._externalTypes.clear();
+        return imports.toString();
+    }
+
     /**
      * Converts the identifier to a type.
-     * @param identifier
-     * @return
+     * @param identifier variable type identifier
+     * @return type information details
      */
     public ResolvedTypeInfo processTypeOrIdentifier(String identifier) {
         if (!identifier.contains(".")) {
@@ -72,13 +81,26 @@ public class ClassOrInterfaceTypeUtil implements ITypeConvertUtil {
 
     /**
      * Handles the identifier and returns the converted type
-     * @param identifier
-     * @return
+     * @param identifier variable type identifier
+     * @return type information details
      */
     private ResolvedTypeInfo attemptResolveType(String identifier) {
         // attempt to resolve the type
-        return this._typeResolver.resolveType(identifier);
+        ResolvedTypeInfo resolvedTypeInfo = this._typeResolver.resolveType(identifier);
+        if (resolvedTypeInfo.isExternal() && !this.hasResolvedExternalType(resolvedTypeInfo)) {
+            this._externalTypes.add(resolvedTypeInfo);
+        }
+
+        return resolvedTypeInfo;
     }
 
+    private Boolean hasResolvedExternalType(ResolvedTypeInfo currentType) {
+        for (ResolvedTypeInfo resolvedTypeInfo : this._externalTypes) {
+            if (resolvedTypeInfo.getTsSymbol().equals(currentType.getTsSymbol())) {
+                return true;
+            }
+        }
 
+        return false;
+    }
 }

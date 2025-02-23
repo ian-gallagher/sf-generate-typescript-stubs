@@ -1,21 +1,23 @@
-import conversion.type.ClassOrInterfaceTypeUtil;
-import conversion.type.ITypeConvertUtil;
-import conversion.type.PrimitiveTypeUtil;
+import tsgeneration.type.*;
 import listeners.ApexParseListener;
+
+import java.io.FileWriter;
 import java.nio.file.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import apex.FileIterator;
-import conversion.writers.ClassOrInterfaceWriter;
-import conversion.writers.PrimitiveTypeWriter;
-import conversion.type.TypeUtils;
 import settings.Provider;
-import conversion.Creator;
-import conversion.Writer;
-import typeresolution.ITypeResolver;
-import typeresolution.TypeResolver;
+import tsgeneration.type.resolution.ITypeResolver;
+import tsgeneration.type.resolution.ResolvedTypeInfo;
+import tsgeneration.type.resolution.TypeResolver;
 import utils.FileUtils;
 
 public class Main {
+    private final static List<String> tsFilesProcessed = new ArrayList<>();
+
     public static void main(String[] args) {
         String apexCodeFolderPath;
         Provider settingsProvider = new Provider();
@@ -28,6 +30,8 @@ public class Main {
         }
 
         ITypeResolver typeResolver = new TypeResolver(apexCodeFolderPath);
+        TypeUtils typeUtils = new TypeUtils(typeResolver);
+        TypeConverterFactory typeConverterFactory = new TypeConverterFactory(apexCodeFolderPath, typeUtils);
 
         try (FileIterator fileIterator = new FileIterator(apexCodeFolderPath, "cls")) {
             while (fileIterator.hasNext()) {
@@ -36,28 +40,36 @@ public class Main {
                     String apexFileName = file.getFileName().toString();
                     String apexFilePath = apexCodeFolderPath + apexFileName;
 
-                    // this writer will be used to write the TypeScript code to the output file
-                    Writer writer = FileUtils.createFileWriter(apexFileName);
-                    TypeUtils typeUtils = new TypeUtils(typeResolver);
-                    ITypeConvertUtil classOrInterfaceUtil = new ClassOrInterfaceTypeUtil(typeResolver, typeUtils);
-                    ITypeConvertUtil typeConvertUtil = new PrimitiveTypeUtil(typeResolver, typeUtils);
+                    try (FileWriter tsFileWriter = FileUtils.getTsFileWriter(FileUtils.removeExtension(apexFileName) + ".ts")) {
+                        ApexParseListener listenerConverter = new ApexParseListener(
+                                apexFilePath,
+                                tsFileWriter,
+                                typeUtils,
+                                typeConverterFactory
+                        );
+                        listenerConverter.convert();
+                    } catch (IOException e) {
+                        System.err.println("Error creating TypeScript file: " + e.getMessage());
+                    }
 
-                    ApexParseListener converter = new ApexParseListener(
-                            apexFileName,
-                            apexCodeFolderPath,
-                            new Creator(
-                                    writer,
-                                    new ClassOrInterfaceWriter(writer, typeUtils, classOrInterfaceUtil),
-                                    new PrimitiveTypeWriter(writer, typeConvertUtil)
-                            )
-                    );
-                    converter.convert();
-
+                    tsFilesProcessed.add(apexFileName);
                     System.out.println("Processed file: " + apexFilePath);
                 }
             }
         } catch (IOException e) {
             System.err.println("Error iterating over files: " + e.getMessage());
+        }
+
+        try (FileWriter indexFileWriter = FileUtils.getTsFileWriter("index.ts")) {
+            for (String tsFile : tsFilesProcessed) {
+                indexFileWriter.write("export * from './" + FileUtils.removeExtension(tsFile) + "';\n");
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating index.ts: " + e.getMessage());
+        }
+
+        for (Map.Entry<String, ResolvedTypeInfo> entry : typeResolver.getResolvedTypes().entrySet()) {
+            System.out.println(entry.getKey() + " => " + entry.getValue().originalSymbol());
         }
     }
 }

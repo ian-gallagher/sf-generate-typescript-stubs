@@ -1,4 +1,4 @@
-package typeresolution;
+package tsgeneration.type.resolution;
 
 import listeners.ApexTypeListener;
 import parsing.ParseUtils;
@@ -23,6 +23,7 @@ public class TypeResolver implements ITypeResolver {
 
     public ResolvedTypeInfo resolveType(String symbol) {
         ResolvedTypeInfo resolvedTypeInfo = _typeMap.get(symbol);
+
         if (resolvedTypeInfo != null) {
             return resolvedTypeInfo;
         }
@@ -32,7 +33,7 @@ public class TypeResolver implements ITypeResolver {
         File file = new File(_apexFilepath, fileName);
 
         if (!file.exists()) {
-            return new ResolvedTypeInfo();
+            return null;
         }
 
         try {
@@ -43,18 +44,18 @@ public class TypeResolver implements ITypeResolver {
                 walkerAndCompliationUnit.parseTreeWalker.walk(listener, walkerAndCompliationUnit.compilationUnitContext);
             } catch (ApexTypeListener.TypeFoundException e) {
                 // Early exit when type is found
-                ResolvedTypeInfo newlyResolvedTypeInfo = new ResolvedTypeInfo(file, symbol);
+                ResolvedTypeInfo newlyResolvedTypeInfo = new ResolvedTypeInfo(file, parts, symbol);
                 // TODO maybe the TypeFoundException could return details about the located type based on modifiers etc
                 newlyResolvedTypeInfo.resolvedTsSymbol = symbol;
                 _typeMap.put(symbol, newlyResolvedTypeInfo);
                 return newlyResolvedTypeInfo;
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return new ResolvedTypeInfo();
+            System.out.println("Error resolving type: " + e.getMessage());
+            return null;
         }
 
-        return new ResolvedTypeInfo();
+        return null;
     }
 
     public Map<String, ResolvedTypeInfo> getResolvedTypes() {

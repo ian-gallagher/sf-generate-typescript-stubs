@@ -1,16 +1,15 @@
-package conversion.type;
+package tsgeneration.type.conversion;
 
+import tsgeneration.type.TypeUtils;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import typeresolution.ITypeResolver;
-import typeresolution.ResolvedTypeInfo;
+import tsgeneration.type.resolution.ResolvedTypeInfo;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PrimitiveTypeUtil implements ITypeConvertUtil {
+public class PrimitiveTypeConverter implements ITypeConvertUtil {
     private final TypeUtils _typeUtils;
-    private final ITypeResolver _typeResolver;
     private static final Map<String, String> PRIMITIVE_TYPES = new HashMap<>();
 
     static {
@@ -24,9 +23,8 @@ public class PrimitiveTypeUtil implements ITypeConvertUtil {
         PRIMITIVE_TYPES.put("boolean", "boolean");
     }
 
-    public PrimitiveTypeUtil(ITypeResolver typeResolver, TypeUtils typeUtils) {
+    public PrimitiveTypeConverter(TypeUtils typeUtils) {
         this._typeUtils = typeUtils;
-        this._typeResolver = typeResolver;
     }
 
     public ResolvedTypeInfo convertType(List<TerminalNode> terminalNodes) {
@@ -44,13 +42,12 @@ public class PrimitiveTypeUtil implements ITypeConvertUtil {
         if (jsTypeIdentifier != null) {
             return this._typeUtils.buildResolvedTypeObject(jsTypeIdentifier);
         } else {
-            // attempt to resolve the type
-            ResolvedTypeInfo resolvedTypeInfo = this._typeResolver.resolveType(identifier);
-            if (resolvedTypeInfo.isResolved) {
-                return resolvedTypeInfo;
-            }
-
-            return this._typeUtils.buildResolvedTypeObject(identifier);
+            return new ResolvedTypeInfo(identifier);
         }
+    }
+
+    @Override
+    public String flushImports() {
+        return null;
     }
 }

@@ -1,19 +1,20 @@
-package conversion.type;
+package tsgeneration.type;
 
 import antlrapex.apexParser;
 import antlrapex.apexParser.ClassOrInterfaceTypeContext;
-import conversion.Writer;
-import conversion.type.argument.TypeArgumentInfo;
-import conversion.type.argument.TypeArgumentsIterator;
-import typeresolution.ResolvedTypeInfo;
+import tsgeneration.InterfaceWriter;
+import tsgeneration.type.argument.TypeArgumentInfo;
+import tsgeneration.type.argument.TypeArgumentsIterator;
+import tsgeneration.type.conversion.ITypeConvertUtil;
+import tsgeneration.type.resolution.ResolvedTypeInfo;
 
 public class MapClassType implements IClassOrInterfaceProcessor {
-    Writer _tsTypeWriter;
+    InterfaceWriter _tsTypeWriter;
     ITypeConvertUtil _typeConvertUtil;
     TypeUtils _typeUtils;
 
     public MapClassType(
-            Writer tsTypeCreator,
+            InterfaceWriter tsTypeCreator,
             ITypeConvertUtil typeConvertUtil,
             TypeUtils typeUtils
     ) {
@@ -24,7 +25,7 @@ public class MapClassType implements IClassOrInterfaceProcessor {
 
     public void iterateArguments(
             ClassOrInterfaceTypeContext classOrInterfaceType,
-            String contextType
+            ResolvedTypeInfo contextType
     ) {
         this._tsTypeWriter.concatLine("{ [key: ");
 
@@ -42,7 +43,7 @@ public class MapClassType implements IClassOrInterfaceProcessor {
             ClassOrInterfaceTypeContext innerClassOrInterfaceType = typeContext.classOrInterfaceType();
             ResolvedTypeInfo resolvedInnerType = this._typeConvertUtil.convertType(innerClassOrInterfaceType.Identifier());
 
-            this.processArgumentForMapType(innerClassOrInterfaceType, resolvedInnerType.symbol, iterator);
+            this.processArgumentForMapType(innerClassOrInterfaceType, resolvedInnerType, iterator);
             this._tsTypeWriter.concatLine(this._typeUtils.buildBrackets(typeContext));
         }
 
@@ -51,23 +52,23 @@ public class MapClassType implements IClassOrInterfaceProcessor {
 
     private void processArgumentForMapType(
             ClassOrInterfaceTypeContext innerClassOrInterfaceType,
-            String contextType,
+            ResolvedTypeInfo contextType,
             TypeArgumentsIterator iterator
     ) {
         if (innerClassOrInterfaceType != null) {
             // if in the context of a map suffix type with closing bracket "]: " for the key
             if (iterator.isFirst()) {
-                this._tsTypeWriter.concatLine(contextType + "]: ");
+                this._tsTypeWriter.concatLine(contextType.getTsSymbol() + "]: ");
             } else {
                 if (!innerClassOrInterfaceType.typeArguments().isEmpty()) {
                     ClassOrInterfaceTypeFactory.getConversionWriter(
-                            contextType,
+                            contextType.originalSymbol(),
                             this._tsTypeWriter,
                             this._typeUtils,
                             this._typeConvertUtil
                     ).iterateArguments(innerClassOrInterfaceType, contextType);
                 } else {
-                    this._tsTypeWriter.concatLine(contextType);
+                    this._tsTypeWriter.concatLine(contextType.getTsSymbol());
                 }
             }
 

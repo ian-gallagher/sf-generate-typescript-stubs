@@ -1,4 +1,4 @@
-package conversion.type.argument;
+package tsgeneration.type.argument;
 
 import antlrapex.apexParser.TypeArgumentContext;
 

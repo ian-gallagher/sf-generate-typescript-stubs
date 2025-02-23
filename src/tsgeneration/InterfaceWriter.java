@@ -1,13 +1,14 @@
-package conversion;
+package tsgeneration;
 
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class Writer {
+public class InterfaceWriter {
     private final FileWriter _writer;
     private Integer _indentationLevel = 0;
+    private final StringBuilder _currentBodyOutput = new StringBuilder();
 
-    public Writer(
+    public InterfaceWriter(
             FileWriter fileWriter
     ) {
         this._writer = fileWriter;
@@ -38,10 +39,15 @@ public class Writer {
     }
 
     private void write(String code) {
+        this._currentBodyOutput.append(code);
+    }
+
+    public void flush() {
         try {
-            this._writer.write(code);
+            this._writer.write(this._currentBodyOutput.toString());
+            this._currentBodyOutput.setLength(0);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write code to TypeScript file");
+            throw new RuntimeException("Failed to write to TypeScript file");
         }
     }
 
@@ -52,13 +58,5 @@ public class Writer {
      */
     private String getIndentation() {
         return "  ".repeat(Math.max(0, this._indentationLevel));
-    }
-
-    public void close() {
-        try {
-            this._writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to close TypeScript file");
-        }
     }
 }
