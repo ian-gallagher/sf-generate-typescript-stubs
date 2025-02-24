@@ -27,5 +27,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-/src/antlrapex/
-/output/
+/src/org/gallaghercodedesign/apextsstubgenerator/antlrapex/
+/src/org/gallaghercodedesign/apextsstubgenerator/output/

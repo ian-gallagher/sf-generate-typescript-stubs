@@ -20,4 +20,4 @@ printcustom() {
 }
 
 printcustom "Generating lexer/parser code" "${BLUE}" "$BOLD"
-java -jar "${FULL_ANTLR_FILE_PATH}" -package antlrapex -o src/antlrapex apex.g4
+java -jar "${FULL_ANTLR_FILE_PATH}" -package antlrapex -o src/com/gallaghercodedesign/apextsstubgenerator/antlrapex apex.g4

@@ -1,0 +1,65 @@
+package org.gallaghercodedesign.apextsstubgenerator.tsgeneration.type.resolution;
+
+import org.gallaghercodedesign.apextsstubgenerator.listeners.ApexTypeListener;
+import org.gallaghercodedesign.apextsstubgenerator.parsing.ParseUtils;
+import org.gallaghercodedesign.apextsstubgenerator.parsing.WalkerAndCompilationUnit;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TypeResolver implements ITypeResolver {
+    private final Path _apexFilepath;
+    private final Map<String, ResolvedTypeInfo> _typeMap = new HashMap<>();
+
+    /**
+     * Specify the filepath folder to the apex files
+     * @param apexFilepath filepath folder to the apex files
+     */
+    public TypeResolver(Path apexFilepath) {
+        this._apexFilepath = apexFilepath;
+    }
+
+    public ResolvedTypeInfo resolveType(String symbol) {
+        ResolvedTypeInfo resolvedTypeInfo = _typeMap.get(symbol);
+
+        if (resolvedTypeInfo != null) {
+            return resolvedTypeInfo;
+        }
+
+        String[] parts = symbol.split("\\.");
+        String fileName = parts[0] + ".cls";
+        File file = new File(this._apexFilepath.normalize().toFile(), fileName);
+
+        if (!file.exists()) {
+            return null;
+        }
+
+        try {
+            WalkerAndCompilationUnit walkerAndCompliationUnit = ParseUtils.getWalker(file.getAbsolutePath());
+            ApexTypeListener listener = new ApexTypeListener(parts[0], parts.length > 1 ? parts[1] : null);
+
+            try {
+                walkerAndCompliationUnit.parseTreeWalker.walk(listener, walkerAndCompliationUnit.compilationUnitContext);
+            } catch (ApexTypeListener.TypeFoundException e) {
+                // Early exit when type is found
+                ResolvedTypeInfo newlyResolvedTypeInfo = new ResolvedTypeInfo(file, parts, symbol);
+                // TODO maybe the TypeFoundException could return details about the located type based on modifiers etc
+                newlyResolvedTypeInfo.resolvedTsSymbol = symbol;
+                _typeMap.put(symbol, newlyResolvedTypeInfo);
+                return newlyResolvedTypeInfo;
+            }
+        } catch (IOException e) {
+            System.out.println("Error resolving type: " + e.getMessage());
+            return null;
+        }
+
+        return null;
+    }
+
+    public Map<String, ResolvedTypeInfo> getResolvedTypes() {
+        return this._typeMap;
+    }
+}
