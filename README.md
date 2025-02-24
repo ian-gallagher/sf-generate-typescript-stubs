@@ -2,6 +2,9 @@
 ## About this Project
 This project is a tool to generate TypeScript stubs from Apex code. The tool uses antlr4 to parse the Apex code and generate TypeScript stubs. The generated TypeScript stubs can be used to create TypeScript classes that can be used to interact with Salesforce APIs.
 
+## Download Pre-built JAR
+You can download the pre-built JAR from [releases] (https://github.com/ian-gallagher/sf-generate-typescript-stubs/releases/)
+
 ## Requisites
 - Java JDK
 - Verify `scripts/config.cfg` settings antlr4 jar file path is correct
