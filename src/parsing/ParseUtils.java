@@ -24,7 +24,7 @@ public class ParseUtils {
         return parser.compilationUnit();
     }
 
-    public static WalkerAndCompliationUnit getWalker(
+    public static WalkerAndCompilationUnit getWalker(
             String filePath
         ) throws IOException {
         // Read the Apex code from a file or string
@@ -36,7 +36,7 @@ public class ParseUtils {
         apexParser parser = new apexParser(tokens);
         ParseTreeWalker walker = new ParseTreeWalker();
 
-        WalkerAndCompliationUnit walkerAndCompliationUnit = new WalkerAndCompliationUnit();
+        WalkerAndCompilationUnit walkerAndCompliationUnit = new WalkerAndCompilationUnit();
         walkerAndCompliationUnit.compilationUnitContext = parser.compilationUnit();
         walkerAndCompliationUnit.parseTreeWalker = walker;
         return walkerAndCompliationUnit;

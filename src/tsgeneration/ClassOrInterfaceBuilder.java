@@ -1,27 +1,23 @@
 package tsgeneration;
 
-import antlrapex.apexParser.ClassDeclarationContext;
 import antlrapex.apexParser.Type_Context;
 import antlrapex.apexParser.VariableDeclaratorsContext;
-import tsgeneration.type.ClassOrInterfaceTypeFactory;
-import tsgeneration.type.conversion.ITypeConvertUtil;
-import tsgeneration.type.TypeConverterFactory;
 import tsgeneration.type.TypeUtils;
-import tsgeneration.type.resolution.ResolvedTypeInfo;
+import tsgeneration.writers.VariableTypeBuilder;
 
 public class ClassOrInterfaceBuilder {
     private final TypeUtils _typeUtils;
-    private final InterfaceWriter _writer;
-    private final TypeConverterFactory _typeConverterFactory;
+    private final TsFileWriter _writer;
+    private final VariableTypeBuilder _variableTypeBuilder;
 
     public ClassOrInterfaceBuilder(
             TypeUtils typeUtils,
-            InterfaceWriter tsWriter,
-            TypeConverterFactory typeConverterFactory
+            TsFileWriter tsWriter,
+            VariableTypeBuilder variableTypeBuilder
     ) {
         this._typeUtils = typeUtils;
         this._writer = tsWriter;
-        this._typeConverterFactory = typeConverterFactory;
+        this._variableTypeBuilder = variableTypeBuilder;
     }
 
     public void fieldDeclaration(
@@ -29,49 +25,30 @@ public class ClassOrInterfaceBuilder {
             VariableDeclaratorsContext variableDeclarators
     ) {
         this.beginFieldDeclaration(variableDeclarators);
-
-        if (fieldType.classOrInterfaceType() != null) {
-            ITypeConvertUtil converter = this._typeConverterFactory.getTypeConverter("ClassOrInterfaceType");
-            ResolvedTypeInfo resolvedType = converter.convertType(fieldType.classOrInterfaceType().Identifier());
-
-            // iterate arguments if any
-            ClassOrInterfaceTypeFactory.getConversionWriter(
-                    resolvedType.originalSymbol(),
-                    this._writer,
-                    this._typeUtils,
-                    converter
-            ).iterateArguments(fieldType.classOrInterfaceType(), resolvedType);
-        } else if (fieldType.primitiveType() != null) {
-            ITypeConvertUtil converter = this._typeConverterFactory.getTypeConverter("PrimitiveType");
-            ResolvedTypeInfo resolvedType = converter.convertType(fieldType.primitiveType().getText());
-            this._writer.concatLine(resolvedType.getTsSymbol());
-        }
+        String convertedVariableType = this._variableTypeBuilder.convertType(fieldType);
+        this._writer.appendCode(convertedVariableType);
     }
 
     private void beginFieldDeclaration(VariableDeclaratorsContext variableDeclarators) {
         String currentIdentifier = this._typeUtils.processVariableDeclarators(variableDeclarators);
-        this._writer.beginLine(currentIdentifier + ": ");
+        this._writer.beginCode(currentIdentifier).append(": ");
     }
 
     public void endFieldDeclaration() {
-        this._writer.endLine(";");
+        this._writer.appendCode(";");
     }
 
-    public void beginClass(ClassDeclarationContext ctx) {
-        this._writer.writeLine("export interface " + ctx.Identifier().getText() + " {");
+    public void beginClass(String className) {
+        this._writer.appendCode("export interface " + className+ " {");
         this._writer.incrementIndentation();
     }
 
     public void endClass() {
         this._writer.decrementIndentation();
-        this._writer.endLine("}");
+        this._writer.beginCode("}");
     }
 
-    public String getImports() {
-        return this._typeConverterFactory.getTypeConverter("ClassOrInterfaceType").flushImports();
-    }
-
-    public void flushBody() {
-        this._writer.flush();
+    public TsFileWriter getWriter() {
+        return this._writer;
     }
 }

@@ -13,6 +13,7 @@ import settings.Provider;
 import tsgeneration.type.resolution.ITypeResolver;
 import tsgeneration.type.resolution.ResolvedTypeInfo;
 import tsgeneration.type.resolution.TypeResolver;
+import tsgeneration.writers.VariableTypeBuilder;
 import utils.FileUtils;
 
 public class Main {
@@ -32,6 +33,7 @@ public class Main {
         ITypeResolver typeResolver = new TypeResolver(apexCodeFolderPath);
         TypeUtils typeUtils = new TypeUtils(typeResolver);
         TypeConverterFactory typeConverterFactory = new TypeConverterFactory(apexCodeFolderPath, typeUtils);
+        VariableTypeBuilder variableTypeBuilder = new VariableTypeBuilder(typeConverterFactory, typeUtils);
 
         try (FileIterator fileIterator = new FileIterator(apexCodeFolderPath, "cls")) {
             while (fileIterator.hasNext()) {
@@ -45,7 +47,8 @@ public class Main {
                                 apexFilePath,
                                 tsFileWriter,
                                 typeUtils,
-                                typeConverterFactory
+                                typeConverterFactory,
+                                variableTypeBuilder
                         );
                         listenerConverter.convert();
                     } catch (IOException e) {

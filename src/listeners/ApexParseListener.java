@@ -3,12 +3,14 @@ package listeners;
 import antlrapex.apexBaseListener;
 import antlrapex.apexParser.*;
 import tsgeneration.ClassOrInterfaceBuilder;
-import tsgeneration.InterfaceWriter;
+import tsgeneration.TsFileWriter;
 import tsgeneration.type.TypeConverterFactory;
 import tsgeneration.type.TypeUtils;
 import parsing.ParseUtils;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import tsgeneration.writers.ApiMethodBuilder;
+import tsgeneration.writers.VariableTypeBuilder;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,16 +21,19 @@ public class ApexParseListener extends apexBaseListener {
     private final ParseTree _tree;
     private final ApexListenerContext _context = new ApexListenerContext();
     private final List<ClassOrInterfaceBuilder> _classOrInterfaceBuilders = new ArrayList<>();
+    private final List<ApiMethodBuilder> _apiMethodBuilders = new ArrayList<>();
     private final TypeUtils _typeUtils;
     private final FileWriter _fileWriter;
     private final TypeConverterFactory _typeConverterFactory;
+    private final VariableTypeBuilder _variableTypeBuilder;
     private Boolean _isAuraEnabled = false;
 
     public ApexParseListener(
             String apexFilePath,
             FileWriter fileWriter,
             TypeUtils typeUtils,
-            TypeConverterFactory typeConverterFactory
+            TypeConverterFactory typeConverterFactory,
+            VariableTypeBuilder variableTypeBuilder
 
     ) throws IOException {
         // Parse the input and get the AST
@@ -37,6 +42,7 @@ public class ApexParseListener extends apexBaseListener {
         // this writer will be used to write the TypeScript code to the output file
         this._fileWriter = fileWriter;
         this._typeConverterFactory = typeConverterFactory;
+        this._variableTypeBuilder = variableTypeBuilder;
     }
 
     public void convert() throws IOException {
@@ -49,20 +55,28 @@ public class ApexParseListener extends apexBaseListener {
     @Override
     public void enterClassDeclaration(ClassDeclarationContext ctx) {
         this._context.currentTypeLevel++;
+        this._context.currentInterfaceWriter = new TsFileWriter(this._fileWriter);
+        String className = ctx.Identifier().getText();
         this._classOrInterfaceBuilders.add(new ClassOrInterfaceBuilder(
                 this._typeUtils,
-                new InterfaceWriter(this._fileWriter), // re-use the same file writer for classes
-                this._typeConverterFactory
+                this._context.currentInterfaceWriter, // re-use the same file writer for classes
+                this._variableTypeBuilder
         ));
 
-        this.getCurrentClassBuilder().beginClass(ctx);
+        this._apiMethodBuilders.add(new ApiMethodBuilder(
+                className,
+                this._variableTypeBuilder,
+                new TsFileWriter(this._fileWriter)
+        ));
+
+        this.getCurrentClassBuilder().beginClass(className);
     }
 
     @Override
     public void exitClassDeclaration(ClassDeclarationContext ctx) {
         this.getCurrentClassBuilder().endClass();
 
-        String importText = this.getCurrentClassBuilder().getImports();
+        String importText = this._typeConverterFactory.getTypeConverter("ClassOrInterfaceType").flushImports();
 
         if (importText != null && !importText.isEmpty()) {
             // write current class imports for external type references to current file
@@ -74,6 +88,7 @@ public class ApexParseListener extends apexBaseListener {
         }
 
         if (this._context.currentTypeLevel == 0) {
+            this.flushApiMethods();
             this.flushClassBodies();
             this.removeClassBuilders();
         }
@@ -125,14 +140,39 @@ public class ApexParseListener extends apexBaseListener {
         }
     }
 
+    @Override
+    public void enterMethodDeclaration(MethodDeclarationContext ctx) {
+        if (this._isAuraEnabled) {
+            this.getCurrentApiMethodBuilder().methodDeclaration(ctx.type_(), ctx.formalParameters(), ctx.Identifier().getText());
+        }
+    }
+
+    private void flushApiMethods() {
+        for (ApiMethodBuilder apiMethodBuilder : this._apiMethodBuilders) {
+            TsFileWriter writer = apiMethodBuilder.getWriter();
+            if (writer.isEmpty()) {
+                continue;
+            }
+
+            writer.appendCode("\n");
+            writer.flush();
+        }
+    }
+
     private void flushClassBodies() {
         for (ClassOrInterfaceBuilder classBuilder : this._classOrInterfaceBuilders) {
-            classBuilder.flushBody();
+            TsFileWriter writer = classBuilder.getWriter();
+            writer.appendCode("\n");
+            writer.flush();
         }
     }
 
     private ClassOrInterfaceBuilder getCurrentClassBuilder() {
         return this._classOrInterfaceBuilders.get(this._context.currentTypeLevel);
+    }
+
+    private ApiMethodBuilder getCurrentApiMethodBuilder() {
+        return this._apiMethodBuilders.get(this._context.currentTypeLevel);
     }
 
     private void removeClassBuilders() {

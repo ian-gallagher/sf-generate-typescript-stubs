@@ -3,31 +3,23 @@ package tsgeneration;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class InterfaceWriter {
+public class TsFileWriter {
     private final FileWriter _writer;
     private Integer _indentationLevel = 0;
     private final StringBuilder _currentBodyOutput = new StringBuilder();
 
-    public InterfaceWriter(
+    public TsFileWriter(
             FileWriter fileWriter
     ) {
         this._writer = fileWriter;
     }
 
-    public void writeLine(String code) {
-        this.write(getIndentation() + code + "\n");
+    public StringBuilder beginCode(String code) {
+        return this._currentBodyOutput.append("\n").append(getIndentation()).append(code);
     }
 
-    public void beginLine(String code) {
-        this.write(getIndentation() + code);
-    }
-
-    public void endLine(String code) {
-        this.write(code + "\n");
-    }
-
-    public void concatLine(String code) {
-        this.write(code);
+    public StringBuilder appendCode(String code) {
+        return this._currentBodyOutput.append(code);
     }
 
     public void incrementIndentation() {
@@ -38,17 +30,18 @@ public class InterfaceWriter {
         this._indentationLevel--;
     }
 
-    private void write(String code) {
-        this._currentBodyOutput.append(code);
-    }
-
     public void flush() {
         try {
-            this._writer.write(this._currentBodyOutput.toString());
+            String code = this._currentBodyOutput.toString();
+            this._writer.write(code);
             this._currentBodyOutput.setLength(0);
         } catch (IOException e) {
             throw new RuntimeException("Failed to write to TypeScript file");
         }
+    }
+
+    public Boolean isEmpty() {
+        return this._currentBodyOutput.isEmpty();
     }
 
     /**

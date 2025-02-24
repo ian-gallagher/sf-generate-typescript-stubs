@@ -2,7 +2,7 @@ package tsgeneration.type.resolution;
 
 import listeners.ApexTypeListener;
 import parsing.ParseUtils;
-import parsing.WalkerAndCompliationUnit;
+import parsing.WalkerAndCompilationUnit;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class TypeResolver implements ITypeResolver {
         }
 
         try {
-            WalkerAndCompliationUnit walkerAndCompliationUnit = ParseUtils.getWalker(file.getAbsolutePath());
+            WalkerAndCompilationUnit walkerAndCompliationUnit = ParseUtils.getWalker(file.getAbsolutePath());
             ApexTypeListener listener = new ApexTypeListener(parts[0], parts.length > 1 ? parts[1] : null);
 
             try {
