@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="test-apex">
+    <output-path>$PROJECT_DIR$/out/artifacts/test_apex</output-path>
+    <root id="root">
+      <element id="dir-copy" path="$PROJECT_DIR$/test-apex" />
+    </root>
+  </artifact>
+</component>
