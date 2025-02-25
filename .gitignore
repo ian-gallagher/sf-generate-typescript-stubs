@@ -27,6 +27,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-/src/main/java/apextsstubgenerator/antlrapex/
 /target/
 /src/main/ts-output/
