@@ -27,7 +27,7 @@ jobs:
 
       - name: Get version from pom.xml
         id: get_version
-        run: echo "::set-output name=VERSION::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         id: create_release
@@ -35,8 +35,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.get_version.outputs.VERSION }}
-          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
           draft: false
           prerelease: true
 
@@ -47,5 +47,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./target/*.jar
-          asset_name: apex-to-typescript-converter-${{ steps.get_version.outputs.VERSION }}.jar
+          asset_name: apex-to-typescript-converter-${{ env.VERSION }}.jar
           asset_content_type: application/java-archive
