@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-source ./scripts/config.cfg
+source ./config.cfg
 
 # Function to print colored messages
 printcustom() {
@@ -20,4 +20,4 @@ printcustom() {
 }
 
 printcustom "Generating lexer/parser code" "${BLUE}" "$BOLD"
-java -jar "${FULL_ANTLR_FILE_PATH}" -package antlrapex -o src/com/gallaghercodedesign/apextsstubgenerator/antlrapex apex.g4
+java -jar "${FULL_ANTLR_FILE_PATH}" -package org.gallaghercodedesign.apextsstubgenerator.antlrapex -o src/org/gallaghercodedesign/apextsstubgenerator/antlrapex apex.g4

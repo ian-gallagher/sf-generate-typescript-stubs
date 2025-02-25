@@ -26,23 +26,24 @@ if [ -z "$JAR_DEST_FOLDER" ]; then
 fi
 
 # Check if the environment variable is set
-if [ -z "$ANTLR_JAR_FILENAME" ]; then
-  echo "ANTLR_JAR_FILENAME is not set. Please check config.cfg settings."
+if [ -z "$COMMONS_CLI_FILENAME" ]; then
+  echo "COMMONS_CLI_FILENAME is not set. Please check config.cfg settings."
   exit 1
 fi
 
 # Check if the environment variable is set
-if [ -z "$FULL_ANTLR_FILE_PATH" ]; then
-  echo "FULL_ANTLR_FILE_PATH is not set. Please check config.cfg settings."
+if [ -z "$COMMONS_CLI_FILE_PATH" ]; then
+  echo "COMMONS_CLI_FILE_PATH is not set. Please check config.cfg settings."
   exit 1
 fi
 
-if [ -e "$FULL_ANTLR_FILE_PATH" ]; then
-    printcustom "$FULL_ANTLR_FILE_PATH found. Skipping further steps." "$BLUE" "$BOLD"
+if [ -e "$COMMONS_CLI_FILE_PATH" ]; then
+    printcustom "$COMMONS_CLI_FILE_PATH found. Skipping further steps." "$BLUE" "$BOLD"
 else
-    printcustom "Downloading $ANTLR_JAR_FILENAME" "$BLUE" "$BOLD"
-    wget https://www.antlr.org/download/"$ANTLR_JAR_FILENAME"
-
-    printcustom "Moving $ANTLR_JAR_FILENAME to ${JAR_DEST_FOLDER}" "$BLUE" "$BOLD"
-    sudo mv "$ANTLR_JAR_FILENAME" "${JAR_DEST_FOLDER}"
+    printcustom "Downloading $COMMONS_CLI_FILENAME" "$BLUE" "$BOLD"
+    wget https://dlcdn.apache.org//commons/cli/binaries/"$COMMONS_CLI_FILENAME"
+    printcustom "Extracting tar file $COMMONS_CLI_FILENAME to ${JAR_DEST_FOLDER}" "$BLUE" "$BOLD"
+    sudo tar -xvf "$COMMONS_CLI_FILENAME" -C "$JAR_DEST_FOLDER"
+    printcustom "Deleting tar file $COMMONS_CLI_FILENAME" "$BLUE" "$BOLD"
+    rm "$COMMONS_CLI_FILENAME"
 fi

@@ -87,6 +87,7 @@ classOrInterfaceModifier
     | OVERRIDE             // method only
     | VIRTUAL              // method only
     | TESTMETHOD           // method only
+    | APEX_INHERITED_SHARING // class only
     | APEX_WITH_SHARING    // class only
     | APEX_WITHOUT_SHARING //class only
     ;
@@ -97,7 +98,7 @@ variableModifier
     ;
 
 classDeclaration
-    : CLASS Identifier typeParameters? (EXTENDS type_)? (IMPLEMENTS typeList)? classBody
+    : CLASS (Identifier | GET) typeParameters? (EXTENDS type_)? (IMPLEMENTS typeList)? classBody
     ;
 
 typeParameters
@@ -169,7 +170,7 @@ memberDeclaration
    for invalid return type after parsing.
  */
 methodDeclaration
-    : OVERRIDE? (type_ | VOID) Identifier formalParameters ('[' ']')* (THROWS qualifiedNameList)? (
+    : OVERRIDE? (type_ | VOID) (Identifier | GET) formalParameters ('[' ']')* (THROWS qualifiedNameList)? (
         methodBody
         | ';'
     )
@@ -513,7 +514,7 @@ apexDbExpression
 
 expression
     : primary
-    | expression '.' GET '(' expressionList? ')'
+    | expression '?'? '.' GET '(' expressionList? ')'
     | expression '.' SET '(' expressionList? ')'
     | expression '?'? '.' Identifier
     | expression '.' THIS
@@ -850,6 +851,10 @@ GLOBAL
 
 WEBSERVICE
     : W E B S E R V I C E
+    ;
+
+APEX_INHERITED_SHARING
+    : I N H E R I T E D SPACE S H A R I N G
     ;
 
 APEX_WITH_SHARING
