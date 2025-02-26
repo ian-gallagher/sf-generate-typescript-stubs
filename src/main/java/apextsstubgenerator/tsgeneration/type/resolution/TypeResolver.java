@@ -85,7 +85,9 @@ public class TypeResolver implements ITypeResolver {
         return null;
     }
 
-    public Map<String, ResolvedTypeInfo> getResolvedTypes() {
-        return this._typeMap;
+    public Map<String, ResolvedTypeInfo> flushResolvedTypes() {
+        Map<String, ResolvedTypeInfo> resolvedTypes = new HashMap<>(this._typeMap);
+        this._typeMap.clear();
+        return resolvedTypes;
     }
 }

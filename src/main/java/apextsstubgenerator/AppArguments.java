@@ -19,6 +19,10 @@ public class AppArguments {
         return this._inputPath;
     }
 
+    /**
+     * Indicates whether the user specified the -d (directory) flag
+     * @return true if the user input for -d (directory) flag is set
+     */
     public Boolean isDirectory() {
         return this._isDirectory;
     }
@@ -27,7 +31,11 @@ public class AppArguments {
         this._outputPath = Paths.get(output);
     }
 
-    public Path getTsOutputPath() {
+    public Path apexFolderPath() {
+        return this._isDirectory ? Paths.get(this._inputPath) : Paths.get(this._inputPath).getParent();
+    }
+
+    public Path getTsBaseOutputFolder() {
         return this._outputPath;
     }
 }

@@ -4,9 +4,7 @@ import apextsstubgenerator.tsgeneration.type.conversion.ClassOrInterfaceTypeConv
 import apextsstubgenerator.tsgeneration.type.conversion.ITypeConvertUtil;
 import apextsstubgenerator.tsgeneration.type.conversion.PrimitiveTypeConverter;
 import apextsstubgenerator.tsgeneration.type.resolution.ITypeResolver;
-import apextsstubgenerator.tsgeneration.type.resolution.TypeResolver;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,10 +13,10 @@ public class TypeConverterFactory {
     Map<String, ITypeConvertUtil> _typeConvertUtils = new HashMap<>();
 
     public TypeConverterFactory(
-            Path apexFilesFolderPath,
+            ITypeResolver typeResolver,
             TypeUtils typeUtils
     ) {
-        this._typeResolver = new TypeResolver(apexFilesFolderPath);
+        this._typeResolver = typeResolver;
         this._typeConvertUtils.put("ClassOrInterface", new ClassOrInterfaceTypeConverter(this._typeResolver, typeUtils));
         this._typeConvertUtils.put("Primitive", new PrimitiveTypeConverter(typeUtils));
     }

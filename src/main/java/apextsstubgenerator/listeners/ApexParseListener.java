@@ -35,20 +35,16 @@ public class ApexParseListener extends apexBaseListener {
     private Boolean _isAuraEnabled = false;
 
     public ApexParseListener(
-            String outputFilePath,
-            Path apexFilePath,
-            TypeUtils typeUtils,
-            TypeConverterFactory typeConverterFactory,
-            VariableTypeBuilder variableTypeBuilder
+            ApexParseListenerInput parserInput
 
     ) throws IOException {
         // Parse the input and get the AST
-        this._outputFolder = outputFilePath;
-        this._currentApexFile = apexFilePath;
-        this._tree = ParseUtils.getTree(apexFilePath.toAbsolutePath().toString());
-        this._typeUtils = typeUtils;
-        this._typeConverterFactory = typeConverterFactory;
-        this._variableTypeBuilder = variableTypeBuilder;
+        this._outputFolder = parserInput.getOutputFolder().toString();
+        this._currentApexFile = parserInput.getInputPath();
+        this._tree = ParseUtils.getTree(parserInput.getInputPath().toAbsolutePath().toString());
+        this._typeUtils = parserInput.getTypeUtils();
+        this._typeConverterFactory = parserInput.getTypeConverterFactory();
+        this._variableTypeBuilder = parserInput.getVariableTypeBuilder();
     }
 
     public List<Path> convert() throws IOException {

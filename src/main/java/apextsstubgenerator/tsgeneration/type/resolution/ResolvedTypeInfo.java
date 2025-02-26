@@ -44,6 +44,10 @@ public class ResolvedTypeInfo {
         }
     }
 
+    public File getFile() {
+        return this.file;
+    }
+
     public String originalSymbol() {
         return this._originalSymbol;
     }
