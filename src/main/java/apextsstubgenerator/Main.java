@@ -26,17 +26,18 @@ public class Main {
             return;
         }
 
-        Path apexCodeFolderPath = Paths.get(appArguments.inputPath());
+        Path apexFileOrFolderPath = Paths.get(appArguments.inputPath());
+        Path apexFolderPath = appArguments.isDirectory() ? apexFileOrFolderPath : apexFileOrFolderPath.getParent();
 
-        ITypeResolver typeResolver = new TypeResolver(apexCodeFolderPath);
+        ITypeResolver typeResolver = new TypeResolver(apexFolderPath);
         TypeUtils typeUtils = new TypeUtils(typeResolver);
-        TypeConverterFactory typeConverterFactory = new TypeConverterFactory(apexCodeFolderPath, typeUtils);
+        TypeConverterFactory typeConverterFactory = new TypeConverterFactory(apexFolderPath, typeUtils);
         VariableTypeBuilder variableTypeBuilder = new VariableTypeBuilder(typeConverterFactory, typeUtils);
 
         Path outputFolder = appArguments.getTsOutputPath();
         List<Path> tsFiles = new ArrayList<>();
 
-        try (FileIterator fileIterator = (appArguments.isDirectory() ? new FileIterator(apexCodeFolderPath, "cls") : new FileIterator(apexCodeFolderPath))) {
+        try (FileIterator fileIterator = (appArguments.isDirectory() ? new FileIterator(apexFolderPath, "cls") : new FileIterator(apexFileOrFolderPath))) {
             while (fileIterator.hasNext()) {
                 Path inputFilePath = fileIterator.next();
                 if (Files.isRegularFile(inputFilePath)) { // Ensure it's a regular file
