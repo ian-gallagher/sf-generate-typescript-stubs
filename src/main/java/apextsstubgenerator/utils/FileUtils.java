@@ -7,6 +7,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileUtils {
+    public static String getRelativeImportPath(Path basePath, Path filePath) {
+        Path relativePath = basePath.relativize(filePath);
+        // Remove the file extension
+        String fileName = relativePath.toString();
+        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
+
+        // Prepend "./" to the result
+        return "./" + fileNameWithoutExtension;
+    }
+
     public static String removeExtension(String fileName) {
         int lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex == -1) {
@@ -16,17 +26,18 @@ public class FileUtils {
     }
 
     public static FileWriter getTsFileWriter(String fileFolder, String fileName) {
-        String fileNameAndPath = fileFolder + fileName;
         FileUtils.ensureDirectoryExists(fileFolder);
 
+        Path finalFilePath = Paths.get(fileFolder, fileName);
+
         try {
-            return new FileWriter(fileNameAndPath);
+            return new FileWriter(finalFilePath.toString());
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create TypeScript file for " + fileNameAndPath);
+            throw new RuntimeException("Failed to create TypeScript file for " + e.getMessage());
         }
     }
 
-    private static void ensureDirectoryExists(String directoryPath) {
+    public static void ensureDirectoryExists(String directoryPath) {
         Path path = Paths.get(directoryPath);
         if (!Files.exists(path)) {
             try {

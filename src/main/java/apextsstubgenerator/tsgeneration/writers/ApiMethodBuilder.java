@@ -39,12 +39,17 @@ public class ApiMethodBuilder {
         this._tsFileWriter.appendCode(";");
     }
 
-    public TsFileWriter getWriter() {
-        if (!this._tsFileWriter.isEmpty()) {
+    public String emptyContents() {
+        if (this.hasContents()) {
             this._tsFileWriter.decrementIndentation();
             this._tsFileWriter.beginCode("}");
+            return this._tsFileWriter.empty();
         }
-        return this._tsFileWriter;
+        return "";
+    }
+
+    public Boolean hasContents() {
+        return !this._tsFileWriter.isEmpty();
     }
 
     private void writeFormalParameters(apexParser.FormalParametersContext formalParameters) {

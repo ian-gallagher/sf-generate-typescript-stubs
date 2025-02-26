@@ -1,17 +1,10 @@
 package apextsstubgenerator.tsgeneration;
 
-import java.io.FileWriter;
-import java.io.IOException;
-
 public class TsFileWriter {
-    private final FileWriter _writer;
     private Integer _indentationLevel = 0;
     private final StringBuilder _currentBodyOutput = new StringBuilder();
 
-    public TsFileWriter(
-            FileWriter fileWriter
-    ) {
-        this._writer = fileWriter;
+    public TsFileWriter() {
     }
 
     public StringBuilder beginCode(String code) {
@@ -30,14 +23,17 @@ public class TsFileWriter {
         this._indentationLevel--;
     }
 
-    public void flush() {
-        try {
-            String code = this._currentBodyOutput.toString();
-            this._writer.write(code);
-            this._currentBodyOutput.setLength(0);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to write to TypeScript file");
+    public String empty() {
+        if (this._currentBodyOutput.isEmpty()) {
+            // if no contents don't create and write file
+            return "";
         }
+
+        this._currentBodyOutput.append("\n");
+
+        String bodyContents = this._currentBodyOutput.toString();
+        this._currentBodyOutput.setLength(0);
+        return bodyContents;
     }
 
     public Boolean isEmpty() {

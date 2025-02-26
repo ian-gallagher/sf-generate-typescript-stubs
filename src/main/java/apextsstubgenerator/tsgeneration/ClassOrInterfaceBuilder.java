@@ -9,6 +9,7 @@ public class ClassOrInterfaceBuilder {
     private final TypeUtils _typeUtils;
     private final TsFileWriter _writer;
     private final VariableTypeBuilder _variableTypeBuilder;
+    private Boolean _hasMembers = false;
 
     public ClassOrInterfaceBuilder(
             TypeUtils typeUtils,
@@ -24,6 +25,7 @@ public class ClassOrInterfaceBuilder {
             Type_Context fieldType,
             VariableDeclaratorsContext variableDeclarators
     ) {
+        this._hasMembers = true;
         this.beginFieldDeclaration(variableDeclarators);
         String convertedVariableType = this._variableTypeBuilder.convertType(fieldType);
         this._writer.appendCode(convertedVariableType);
@@ -43,12 +45,17 @@ public class ClassOrInterfaceBuilder {
         this._writer.incrementIndentation();
     }
 
-    public void endClass() {
-        this._writer.decrementIndentation();
-        this._writer.beginCode("}");
+    public String emptyContents() {
+        if (this.hasContents()) {
+            this._writer.decrementIndentation();
+            this._writer.beginCode("}");
+            return this._writer.empty();
+        }
+
+        return "";
     }
 
-    public TsFileWriter getWriter() {
-        return this._writer;
+    public Boolean hasContents() {
+        return this._hasMembers;
     }
 }

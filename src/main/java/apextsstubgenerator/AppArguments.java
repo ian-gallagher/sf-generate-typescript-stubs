@@ -1,11 +1,14 @@
 package apextsstubgenerator;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class AppArguments {
-    private final static String OUTPUT_TYPES_FOLDER = "ts-output/types/";
+    private final static String OUTPUT_FOLDER_PATH = "ts-output/";
 
     private final String _inputPath;
     private final Boolean _isDirectory;
-    private String _outputPath = OUTPUT_TYPES_FOLDER;
+    private Path _outputPath = Paths.get(OUTPUT_FOLDER_PATH);
 
     public AppArguments(String inputPath, Boolean isDirectory) {
         this._inputPath = inputPath;
@@ -21,10 +24,10 @@ public class AppArguments {
     }
 
     public void setTsOutputPath(String output) {
-        this._outputPath = output;
+        this._outputPath = Paths.get(output);
     }
 
-    public String getTsOutputPath() {
+    public Path getTsOutputPath() {
         return this._outputPath;
     }
 }

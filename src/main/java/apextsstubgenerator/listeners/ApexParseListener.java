@@ -7,47 +7,51 @@ import apextsstubgenerator.tsgeneration.TsFileWriter;
 import apextsstubgenerator.tsgeneration.type.TypeConverterFactory;
 import apextsstubgenerator.tsgeneration.type.TypeUtils;
 import apextsstubgenerator.parsing.ParseUtils;
+import apextsstubgenerator.utils.FileUtils;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import apextsstubgenerator.tsgeneration.writers.ApiMethodBuilder;
 import apextsstubgenerator.tsgeneration.writers.VariableTypeBuilder;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ApexParseListener extends apexBaseListener {
-    public final String currentApexFile;
+    public final List<Path> _filesCreated = new ArrayList<>();
+    public final Path _currentApexFile;
+    public final String _outputFolder;
     private final ParseTree _tree;
     private final ApexListenerContext _context = new ApexListenerContext();
     private final List<ClassOrInterfaceBuilder> _classOrInterfaceBuilders = new ArrayList<>();
     private final List<ApiMethodBuilder> _apiMethodBuilders = new ArrayList<>();
     private final TypeUtils _typeUtils;
-    private final FileWriter _fileWriter;
     private final TypeConverterFactory _typeConverterFactory;
     private final VariableTypeBuilder _variableTypeBuilder;
     private Boolean _isAuraEnabled = false;
 
     public ApexParseListener(
-            String apexFilePath,
-            FileWriter fileWriter,
+            String outputFilePath,
+            Path apexFilePath,
             TypeUtils typeUtils,
             TypeConverterFactory typeConverterFactory,
             VariableTypeBuilder variableTypeBuilder
 
     ) throws IOException {
         // Parse the input and get the AST
-        this.currentApexFile = apexFilePath;
-        this._tree = ParseUtils.getTree(apexFilePath);
+        this._outputFolder = outputFilePath;
+        this._currentApexFile = apexFilePath;
+        this._tree = ParseUtils.getTree(apexFilePath.toAbsolutePath().toString());
         this._typeUtils = typeUtils;
-        // this writer will be used to write the TypeScript code to the output file
-        this._fileWriter = fileWriter;
         this._typeConverterFactory = typeConverterFactory;
         this._variableTypeBuilder = variableTypeBuilder;
     }
 
-    public void convert() throws IOException {
+    public List<Path> convert() throws IOException {
         // Traverse the AST using a listener or visitor
         ParseTreeWalker walker = new ParseTreeWalker();
         try {
@@ -56,13 +60,14 @@ public class ApexParseListener extends apexBaseListener {
             throw new RuntimeException("Failed to walk the parse tree");
         }
 
-        this._fileWriter.close();
+        //return files created
+        return this._filesCreated;
     }
 
     @Override
     public void enterClassDeclaration(ClassDeclarationContext ctx) {
         this._context.currentTypeLevel++;
-        this._context.currentInterfaceWriter = new TsFileWriter(this._fileWriter);
+        this._context.currentInterfaceWriter = new TsFileWriter();
 
         String className;
         if (ctx.GET() != null) {
@@ -80,7 +85,7 @@ public class ApexParseListener extends apexBaseListener {
         this._apiMethodBuilders.add(new ApiMethodBuilder(
                 className,
                 this._variableTypeBuilder,
-                new TsFileWriter(this._fileWriter)
+                new TsFileWriter()
         ));
 
         this.getCurrentClassBuilder().beginClass(className);
@@ -88,22 +93,13 @@ public class ApexParseListener extends apexBaseListener {
 
     @Override
     public void exitClassDeclaration(ClassDeclarationContext ctx) {
-        this.getCurrentClassBuilder().endClass();
-
-        String importText = this._typeConverterFactory.getTypeConverter("ClassOrInterfaceType").flushImports();
-
-        if (importText != null && !importText.isEmpty()) {
-            // write current class imports for external type references to current file
-            try {
-                this._fileWriter.write(importText + "\n");
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to write to TypeScript file");
-            }
-        }
-
         if (this._context.currentTypeLevel == 0) {
-            this.flushApiMethods();
-            this.flushClassBodies();
+            String importText = this._typeConverterFactory.getTypeConverter("ClassOrInterfaceType").flushImports();
+            this.writeFileContents(
+                    this._currentApexFile,
+                    Paths.get(this._outputFolder, "types"),
+                    importText
+            );
             this.removeClassBuilders();
         }
 
@@ -169,23 +165,55 @@ public class ApexParseListener extends apexBaseListener {
         }
     }
 
-    private void flushApiMethods() {
-        for (ApiMethodBuilder apiMethodBuilder : this._apiMethodBuilders) {
-            TsFileWriter writer = apiMethodBuilder.getWriter();
-            if (writer.isEmpty()) {
-                continue;
-            }
+    private void writeFileContents(Path currentApexFile, Path outputFolder, String importsText) {
+        if (this.classOrApiMethodHasContents()) {
+            String outputFileName = FileUtils.removeExtension(currentApexFile.getFileName().toString()) + ".ts";
+            Path outputTsFilePath = Paths.get(outputFolder.toString(), outputFileName);
+            FileUtils.ensureDirectoryExists(outputFolder.toString());
 
-            writer.appendCode("\n");
-            writer.flush();
+            // Append StringBuilder content to file
+            try (BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(
+                            outputTsFilePath.toString(),
+                            true
+                    ))
+            ) {
+                writer.write(importsText + "\n");
+                this.flushApiMethods(writer);
+                this.flushClassBodies(writer);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to write to TypeScript file " + e.getMessage());
+            } finally {
+                this._filesCreated.add(outputTsFilePath);
+            }
         }
     }
 
-    private void flushClassBodies() {
+    private Boolean classOrApiMethodHasContents() {
+        for (ApiMethodBuilder apiMethodBuilder : this._apiMethodBuilders) {
+            if(apiMethodBuilder.hasContents()) {
+                return true;
+            }
+        }
+
         for (ClassOrInterfaceBuilder classBuilder : this._classOrInterfaceBuilders) {
-            TsFileWriter writer = classBuilder.getWriter();
-            writer.appendCode("\n");
-            writer.flush();
+            if(classBuilder.hasContents()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void flushApiMethods(BufferedWriter writer) throws IOException {
+        for (ApiMethodBuilder apiMethodBuilder : this._apiMethodBuilders) {
+            writer.write(apiMethodBuilder.emptyContents());
+        }
+    }
+
+    private void flushClassBodies(BufferedWriter writer) throws IOException {
+        for (ClassOrInterfaceBuilder classBuilder : this._classOrInterfaceBuilders) {
+            writer.write(classBuilder.emptyContents());
         }
     }
 
