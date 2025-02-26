@@ -5,7 +5,7 @@
   "main": "src/Main",
   "scripts": {
     "assignxperms": "sudo chmod +x ./scripts/set_execute_perms.sh && ./scripts/set_execute_perms.sh",
-    "postinstall": "npm run assignxperms && ./scripts/download_antlr_jar.sh && npm run buildgrammar",
+    "postinstall": "npm run assignxperms && npm run buildgrammar",
     "buildgrammar": "./scripts/generate_grammar_code.sh"
   },
   "author": "",

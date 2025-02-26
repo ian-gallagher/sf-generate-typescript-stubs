@@ -3,7 +3,7 @@
   <component name="AdditionalModuleElements">
     <content url="file://$MODULE_DIR$" dumb="true">
       <excludeFolder url="file://$MODULE_DIR$/src/main/ts-output" />
-      <excludeFolder url="file://$MODULE_DIR$/test-apex" />
+      <excludeFolder url="file://$MODULE_DIR$/test-input-apex" />
     </content>
   </component>
 </module>
